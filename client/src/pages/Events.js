@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Modal from '../components/Modal/Modal';
 import Backdrop from '../components/Backdrop/Backdrop';
+import EventList from '../components/Events/EventList/EventList';
 import AuthContext from '../context/auth-context';
 
 import './Events.css';
@@ -53,10 +54,6 @@ class EventsPage extends Component {
             description
             date
             price
-            creator {
-              _id 
-              email
-            }
           }
         }
       `,
@@ -80,7 +77,21 @@ class EventsPage extends Component {
         return res.json();
       })
       .then(resData => {
-        this.fetchEvents();
+        this.setState(prevState => {
+          const updatedEvents = { ...prevState.events };
+          updatedEvents.push({
+            _id: resData.data.createEvent._id,
+            title: resData.data.createEvent.title,
+            description: resData.data.createEvent.description,
+            date: resData.data.createEvent.date,
+            price: resData.data.createEvent.price,
+            creator: {
+              _id: this.context.userId,
+            },
+          });
+
+          return { events: updatedEvents };
+        });
       })
       .catch(err => {
         console.log(err);
@@ -133,13 +144,6 @@ class EventsPage extends Component {
   };
 
   render() {
-    const eventList = this.state.events.map(event => {
-      return (
-        <li key={event._id} className="events__list-item">
-          {event.title}
-        </li>
-      );
-    });
     return (
       <React.Fragment>
         {this.state.creating && <Backdrop />}
@@ -179,7 +183,7 @@ class EventsPage extends Component {
             </button>
           </div>
         )}
-        <ul className="events__list">{eventList}</ul>
+        <EventList events={this.state.events} authUserId={this.context.userId} />
       </React.Fragment>
     );
   }
